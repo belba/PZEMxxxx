@@ -46,34 +46,38 @@ def get_pzem_register(pzem_model="PZEMgeneric"):
                 "I": {"port": 1, "digits": 2, "Unit": "A", "use": True, "writeable": False, "functioncode": 4},
                 "P": {"port": 2, "digits": 1, "Unit": "W", "use": True, "writeable": False, "functioncode": 4},
                 "P_sum": {"port": 4, "digits": 0, "Unit": "Wh", "use": True, "writeable": False, "functioncode": 4},
-                "U_max_alarm_stat": {"port": 6, "digits": 0, "Unit": "V", "use": True, "writeable": True, "functioncode": 4},
-                "U_min_alarm_stat": {"port": 7, "digits": 0, "Unit": "V", "use": True, "writeable": True, "functioncode": 4},
+                "U_max_alarm_stat": {"port": 6, "digits": 0, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "U_min_alarm_stat": {"port": 7, "digits": 0, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
                 "U_max_alarm_set": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": True, "functioncode": 3},
                 "U_min_alarm_set": {"port": 1, "digits": 2, "Unit": "V", "use": True, "writeable": True, "functioncode": 3},
                 "Address": {"port": 2, "digits": 0, "Unit": None, "use": True, "writeable": True, "functioncode": 3},
-                "Current_Range": {"port": 3, "digits": 0, "Unit": None, "use": True, "writeable": True, "functioncode": 3},
+                "Current_Range": {"port": 3, "digits": 0, "Unit": "A", "use": True, "writeable": True, "functioncode": 3},
             }
 
     elif pzem_model == "PZEM003":
             pzem_register = {
-                "U": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": False},
-                "I": {"port": 1, "digits": 2, "Unit": "A", "use": True, "writeable": False},
-                "P": {"port": 2, "digits": 2, "Unit": "W", "use": True, "writeable": False},
-                "P_sum": {"port": 3, "digits": 2, "Unit": "Wh", "use": True, "writeable": False},
-                "U_max_alarm": {"port": 24, "digits": 2, "Unit": "V", "use": True, "writeable": True},
-                "U_min_alarm": {"port": 24, "digits": 2, "Unit": "V", "use": True, "writeable": True},
-                "Address": {"port": 24, "digits": 2, "Unit": None, "use": True, "writeable": True},
+                "U": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "I": {"port": 1, "digits": 2, "Unit": "A", "use": True, "writeable": False, "functioncode": 4},
+                "P": {"port": 2, "digits": 1, "Unit": "W", "use": True, "writeable": False, "functioncode": 4},
+                "P_sum": {"port": 4, "digits": 0, "Unit": "Wh", "use": True, "writeable": False, "functioncode": 4},
+                "U_max_alarm_stat": {"port": 6, "digits": 0, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "U_min_alarm_stat": {"port": 7, "digits": 0, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "U_max_alarm_set": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": True, "functioncode": 3},
+                "U_min_alarm_set": {"port": 1, "digits": 2, "Unit": "V", "use": True, "writeable": True, "functioncode": 3},
+                "Address": {"port": 2, "digits": 0, "Unit": None, "use": True, "writeable": True, "functioncode": 3},
             }
     elif pzem_model == "PZEM017":
             pzem_register = {
-                "U": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": False},
-                "I": {"port": 1, "digits": 2, "Unit": "A", "use": True, "writeable": False},
-                "P": {"port": 2, "digits": 2, "Unit": "W", "use": True, "writeable": False},
-                "P_sum": {"port": 3, "digits": 2, "Unit": "Wh", "use": True, "writeable": False},
-                "U_max_alarm": {"port": 24, "digits": 2, "Unit": "V", "use": True, "writeable": True},
-                "U_min_alarm": {"port": 24, "digits": 2, "Unit": "V", "use": True, "writeable": True},
-                "Address": {"port": 24, "digits": 2, "Unit": None, "use": True, "writeable": True},
-                "Current_Range": {"port": 24, "digits": 2, "Unit": "A", "use": True, "writeable": True},
+                "U": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "I": {"port": 1, "digits": 2, "Unit": "A", "use": True, "writeable": False, "functioncode": 4},
+                "P": {"port": 2, "digits": 1, "Unit": "W", "use": True, "writeable": False, "functioncode": 4},
+                "P_sum": {"port": 4, "digits": 0, "Unit": "Wh", "use": True, "writeable": False, "functioncode": 4},
+                "U_max_alarm_stat": {"port": 6, "digits": 0, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "U_min_alarm_stat": {"port": 7, "digits": 0, "Unit": "V", "use": True, "writeable": False, "functioncode": 4},
+                "U_max_alarm_set": {"port": 0, "digits": 2, "Unit": "V", "use": True, "writeable": True, "functioncode": 3},
+                "U_min_alarm_set": {"port": 1, "digits": 2, "Unit": "V", "use": True, "writeable": True, "functioncode": 3},
+                "Address": {"port": 2, "digits": 0, "Unit": None, "use": True, "writeable": True, "functioncode": 3},
+                "Current_Range": {"port": 3, "digits": 0, "Unit": "A", "use": True, "writeable": True, "functioncode": 3},
             }
     else:
         print("model not found")
@@ -103,20 +107,22 @@ def get_cli_arguments(scan_additional_arguments=None):
                              'Default: %s' % OUTPUTFORMAT)
     parser.add_argument('-t', '--measurement',
                         nargs='?', default=MEASUREMENT, const=None,
-                        help='Output format'
+                        help='measurmen string'
                              'Default: %s' % MEASUREMENT)
     parser.add_argument('-s', '--sleep', type=int,
                         nargs='?', default=SLEEP, const=None,
-                        help='Output format'
                              'Default: %s' % SLEEP)
-    parser.add_argument('-b', '--baudrate', type=int,
-                        nargs='?', default=BAUDRATE, const=None,
-                        help='Output format'
-                             'Default: %s' % BAUDRATE)
+    parser.add_argument('--set-address', type=int,
+                        nargs='?', default=METER_MODBUSADDRESS, const=None,
+                        help='Set modbus address'
+                             'Default: %s' % METER_MODBUSADDRESS)
     if scan_additional_arguments:
         scan_additional_arguments(parser)
     args = parser.parse_args()
     return args
+
+def output_cli
+
 
 args = get_cli_arguments()
 
@@ -151,18 +157,20 @@ else:
             if pzem_register[key]["use"] == True:
                 if debug == True: print ("Call register: " + key + " for CLI")
                 if args.output == "cli":
-                     if debug == True: print("using modbus...")
-                     print(key + ": " 
-                        + str( 
-                            instrument.read_register(
-                                functioncode=pzem_register[key]["functioncode"],
-                                registeraddress=pzem_register[key]["port"],
-                                number_of_decimals=pzem_register[key]["digits"],
-                                signed=False
-                                )
-                            )
-                            + pzem_register[key]["Unit"]
+                    if debug == True: print("using modbus...")
+                    msg = (key + ": " )
+                    msg = msg + str( 
+                        instrument.read_register(
+                        functioncode=pzem_register[key]["functioncode"],
+                        registeraddress=pzem_register[key]["port"],
+                        number_of_decimals=pzem_register[key]["digits"],
+                        signed=False
                         )
+                    )
+
+                    if pzem_register[key]["functioncode"] == 4 : msg = msg + pzem_register[key]["Unit"]
+                    print(msg)
+
                 elif args.output == "influxlineprotocol":
                     print(measurement + ",address=" + str(args.address)  
                         + ",model='" + args.model + "'"
