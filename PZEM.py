@@ -103,7 +103,7 @@ def get_cli_arguments(scan_additional_arguments=None):
                              'Default: %s' % METER_MODEL)
     parser.add_argument('-o', '--output',
                         nargs='?', default=OUTPUTFORMAT, const=None,
-                        help='Output format'
+                        help='Output format: cli, influxlineprotocol'
                              'Default: %s' % OUTPUTFORMAT)
     parser.add_argument('-t', '--measurement',
                         nargs='?', default=MEASUREMENT, const=None,
@@ -126,9 +126,33 @@ def get_cli_arguments(scan_additional_arguments=None):
     args = parser.parse_args()
     return args
 
+def output_cli():
+    msg = (key + ": " )
+    msg = msg + str( 
+        instrument.read_register(
+        functioncode=pzem_register[key]["functioncode"],
+        registeraddress=pzem_register[key]["port"],
+        number_of_decimals=pzem_register[key]["digits"],
+        signed=False
+        )
+    )
+    if pzem_register[key]["functioncode"] == 4 : msg = msg + pzem_register[key]["Unit"]
+    print(msg)
+
+def output_influxlineprotocol():
+    msg = (measurement + ",address=" + str(args.address))
+    msg = msg + ",model='" + args.model + "'"
+    msg = msg + " " + key + "=" + str(
+        instrument.read_register(
+        functioncode=pzem_register[key]["functioncode"],
+        registeraddress=pzem_register[key]["port"],
+        number_of_decimals=pzem_register[key]["digits"],
+        signed=False
+        )
+    )   
+    print(msg)
+
 args = get_cli_arguments()
-
-
 
 if debug == True: print ("Device: " + args.device)
 if debug == True: print ("Address: " + str(args.address))
@@ -161,33 +185,9 @@ else:
                 if debug == True: print ("Call register: " + key + " for CLI")
                 if args.output == "cli":
                     if debug == True: print("using modbus...")
-                    msg = (key + ": " )
-                    msg = msg + str( 
-                        instrument.read_register(
-                        functioncode=pzem_register[key]["functioncode"],
-                        registeraddress=pzem_register[key]["port"],
-                        number_of_decimals=pzem_register[key]["digits"],
-                        signed=False
-                        )
-                    )
-
-                    if pzem_register[key]["functioncode"] == 4 : msg = msg + pzem_register[key]["Unit"]
-                    print(msg)
-
+                    output_cli()
                 elif args.output == "influxlineprotocol":
-                    print(measurement + ",address=" + str(args.address)  
-                        + ",model='" + args.model + "'"
-                        + " " + key + "=" + str(
-                            round(
-                                instrument.read_float(
-                                    functioncode=4,
-                                    registeraddress=pzem_register[key]["port"],
-                                    number_of_registers=pzem_register[key]["digits"]
-                                ),2
-                            )
-                        )
-                        + ",unit='" + pzem_register[key]["Unit"] + "'"
-                    )
+                    output_influxlineprotocol()
                 else:
                     print("outputformat not found")
                     print()
