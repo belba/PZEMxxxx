@@ -107,27 +107,30 @@ def get_cli_arguments(scan_additional_arguments=None):
                              'Default: %s' % OUTPUTFORMAT)
     parser.add_argument('-t', '--measurement',
                         nargs='?', default=MEASUREMENT, const=None,
-                        help='measurmen string'
+                        help='measurement string'
                              'Default: %s' % MEASUREMENT)
     parser.add_argument('-s', '--sleep', type=int,
                         nargs='?', default=SLEEP, const=None,
+                        help='sleeptime'
                              'Default: %s' % SLEEP)
     parser.add_argument('--set-address', type=int,
                         nargs='?', default=METER_MODBUSADDRESS, const=None,
                         help='Set modbus address'
                              'Default: %s' % METER_MODBUSADDRESS)
+    parser.add_argument('--debug', type=int,
+                        nargs='?', default=False, const=None,
+                        help='show debugging informations'
+                             'Default: %s' % False)
     if scan_additional_arguments:
         scan_additional_arguments(parser)
     args = parser.parse_args()
     return args
 
-def output_cli
-
-
 args = get_cli_arguments()
 
+
+
 if debug == True: print ("Device: " + args.device)
-if debug == True: print ("Baudrate: " + str(args.baudrate))
 if debug == True: print ("Address: " + str(args.address))
 if debug == True: print ("Model: " + str(args.model))
 
@@ -139,7 +142,7 @@ if not args.device:
 else:
     try:
         instrument = minimalmodbus.Instrument( args.device, args.address)
-        instrument.serial.baudrate = args.baudrate
+        instrument.serial.baudrate = 9600
         instrument.serial.parity = serial.PARITY_EVEN
         instrument.serial.bytesize = 8
         #instrument.serial.stopbits = serial.STOPBITS_TWO
