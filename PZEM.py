@@ -14,7 +14,7 @@ MEASUREMENT = "TEST_PZEM"
 SLEEP = 0
 BAUDRATE = 9600
 
-debug = False
+debug = True
 
 def helpmessage():
     print('Options:')
@@ -89,10 +89,17 @@ def get_cli_arguments(scan_additional_arguments=None):
     parser.prog='pzem'
     parser.description='get all paramater of a pzem-smartmeter device'  
 
+#    parser.add_argument('COMMAND', 
+#                        nargs='?', const=None,
+#                        help='set|read')
+
     parser.add_argument('-d', '--device',
-                        nargs='?', default=METER_SERIALPORT, const=None,
-                        help='Path to serial device like /dev/ttyUSB0.'
-                             'Default: %s' % METER_SERIALPORT)
+                        nargs='?', const=None,
+                        help='Path to serial device like /dev/ttyUSB0.')
+#    parser.add_argument('-d', '--device',
+#                        nargs='?', default=METER_SERIALPORT, const=None,
+#                        help='Path to serial device like /dev/ttyUSB0.'
+#                             'Default: %s' % METER_SERIALPORT)
     parser.add_argument('-a', '--address', type=int, 
                         nargs='?', default=METER_MODBUSADDRESS, const=None,
                         help='Modbusaddress of the device.'
@@ -103,6 +110,7 @@ def get_cli_arguments(scan_additional_arguments=None):
                              'Default: %s' % METER_MODEL)
     parser.add_argument('-o', '--output',
                         nargs='?', default=OUTPUTFORMAT, const=None,
+                        choices=['cli','influxlineprotocol'],
                         help='Output format: cli, influxlineprotocol'
                              'Default: %s' % OUTPUTFORMAT)
     parser.add_argument('-t', '--measurement',
@@ -113,10 +121,19 @@ def get_cli_arguments(scan_additional_arguments=None):
                         nargs='?', default=SLEEP, const=None,
                         help='sleeptime'
                              'Default: %s' % SLEEP)
-    parser.add_argument('--set-address', type=int,
-                        nargs='?', default=METER_MODBUSADDRESS, const=None,
-                        help='Set modbus address'
-                             'Default: %s' % METER_MODBUSADDRESS)
+    parser.add_argument('--sethigh', type=int,
+                        nargs='?', const=None,
+                        help='Set high voltage alarm')
+    parser.add_argument('--setlow', type=int,
+                        nargs='?', const=None,
+                        help='Set low voltage alarm')
+    parser.add_argument('--setcurrenttype',
+                        nargs='?', const=None,
+                        choices=['50A','100A','200A','300A'],
+                        help='Set current shunt, only for PZEM-017. Possible values: 50A, 100A, 200A, 300A')
+    parser.add_argument('--setaddress', type=int,
+                        nargs='?', const=None,
+                        help='Set modbus address')
     parser.add_argument('--debug', type=int,
                         nargs='?', default=False, const=None,
                         help='show debugging informations'
@@ -126,7 +143,7 @@ def get_cli_arguments(scan_additional_arguments=None):
     args = parser.parse_args()
     return args
 
-def output_cli():
+def output_cli(key):
     msg = (key + ": " )
     msg = msg + str( 
         instrument.read_register(
@@ -139,7 +156,11 @@ def output_cli():
     if pzem_register[key]["functioncode"] == 4 : msg = msg + pzem_register[key]["Unit"]
     print(msg)
 
-def output_influxlineprotocol():
+def output_influxlineprotocol(key):
+    if debug == True: print ("----> building measurement string")
+    if args.measurement == MEASUREMENT:
+        measurement =  str(args.address) + "_" + args.model
+    if debug == True: print ("----> measurement string: " + measurement)
     msg = (measurement + ",address=" + str(args.address))
     msg = msg + ",model='" + args.model + "'"
     msg = msg + " " + key + "=" + str(
@@ -152,19 +173,107 @@ def output_influxlineprotocol():
     )   
     print(msg)
 
+def cmd_read():
+    for key in pzem_register:
+        if debug == True: print ("----> Register: " + key)
+        if pzem_register[key]["use"] == True:
+            if debug == True: print ("----> Call register: " + key + " for CLI")
+            if args.output == "cli":
+                if debug == True: print("----> outputformat is cli")
+                output_cli(key)
+            elif args.output == "influxlineprotocol":
+                if debug == True: print("----> outputformat is influxlineprotocol")
+                output_influxlineprotocol(key)
+            else:
+                print("outputformat not found")
+                print()
+                show_connection_parameters()
+                sys.exit(1)
+        time.sleep(SLEEP)
+
+def set_high_voltage_alarm(highvoltage):
+    if debug == True: print("----> set high voltage alarm to " + str(highvoltage))
+    if debug == True: print("----> using register " + str(pzem_register["U_max_alarm_set"]["port"]))
+    if debug == True: print("----> using value " + str(highvoltage))
+    if debug == True: print("----> using digits " + str(pzem_register["U_max_alarm_set"]["digits"]))
+    if debug == True: print("----> using functioncode " + str(pzem_register["U_max_alarm_set"]["functioncode"]))
+    try:
+        instrument.write_register(
+            registeraddress = pzem_register["U_max_alarm_set"]["port"],
+            value = highvoltage,
+            number_of_decimals = pzem_register["U_max_alarm_set"]["digits"],
+            functioncode = 6
+        )
+    except TypeError: 
+        print("TypeError")
+    except ValueError: 
+        print("ValueError")
+    except IOError: 
+        print("IOError")
+
+    msg = ("Voltage max alarm is set at: ")
+    msg = msg + str( 
+        instrument.read_register(
+        functioncode = pzem_register["U_max_alarm_set"]["functioncode"],
+        registeraddress = pzem_register["U_max_alarm_set"]["port"],
+        number_of_decimals = pzem_register["U_max_alarm_set"]["digits"],
+        signed=False
+        )
+    )
+    print(msg)
+
+def set_low_voltage_alarm(lowvoltage):
+    if debug == True: print("----> set low voltage alarm to " + str(lowvoltage))
+    if debug == True: print("----> using register " + str(pzem_register["U_min_alarm_set"]["port"]))
+    if debug == True: print("----> using value " + str(lowvoltage))
+    if debug == True: print("----> using digits " + str(pzem_register["U_min_alarm_set"]["digits"]))
+    if debug == True: print("----> using functioncode " + str(pzem_register["U_min_alarm_set"]["functioncode"]))
+    try:
+        instrument.write_register(
+            registeraddress = pzem_register["U_min_alarm_set"]["port"],
+            value = lowvoltage,
+            number_of_decimals = pzem_register["U_min_alarm_set"]["digits"],
+            functioncode = 6
+        )
+    except TypeError: 
+        print("TypeError")
+    except ValueError: 
+        print("ValueError")
+    except IOError: 
+        print("IOError")
+
+    msg = ("Voltage min alarm is set at: ")
+    msg = msg + str( 
+        instrument.read_register(
+        functioncode = pzem_register["U_min_alarm_set"]["functioncode"],
+        registeraddress = pzem_register["U_min_alarm_set"]["port"],
+        number_of_decimals = pzem_register["U_min_alarm_set"]["digits"],
+        signed=False
+        )
+    )
+    print(msg)
+
+def set_current_type():
+    if debug == True: print("----> set currenttype")
+
+def set_address():
+    if debug == True: print("----> set address")
+
 args = get_cli_arguments()
 
-if debug == True: print ("Device: " + args.device)
-if debug == True: print ("Address: " + str(args.address))
-if debug == True: print ("Model: " + str(args.model))
+if debug == True: print ("----> Device: " + args.device)
+if debug == True: print ("----> Address: " + str(args.address))
+if debug == True: print ("----> Model: " + str(args.model))
 
 if not args.device:
     print('device required')
     print()
-    helpmessage()
+#    helpmessage()
+    args.print_help()
     sys.exit(1)
 else:
     try:
+        if debug == True: print("----> init modbus")
         instrument = minimalmodbus.Instrument( args.device, args.address)
         instrument.serial.baudrate = 9600
         instrument.serial.parity = serial.PARITY_EVEN
@@ -175,25 +284,22 @@ else:
         instrument.debug = False
         instrument.clear_buffers_before_each_transaction = True
         pzem_register = get_pzem_register(args.model)
-        if debug == True: print ("building measurement string")
-        if args.measurement == MEASUREMENT:
-            measurement =  str(args.address) + "_" + args.model
-        if debug == True: print ("measurement string: " + measurement)
-        for key in pzem_register:
-            if debug == True: print ("Register: " + key)
-            if pzem_register[key]["use"] == True:
-                if debug == True: print ("Call register: " + key + " for CLI")
-                if args.output == "cli":
-                    if debug == True: print("using modbus...")
-                    output_cli()
-                elif args.output == "influxlineprotocol":
-                    output_influxlineprotocol()
-                else:
-                    print("outputformat not found")
-                    print()
-                    show_connection_parameters()
-                    sys.exit(1)
-            time.sleep(SLEEP)
+        if args.sethigh != None:
+            if debug == True: print("----> call set high voltage alarm")
+            set_high_voltage_alarm(args.sethigh)
+        if args.setlow != None:
+            if debug == True: print("----> call set low voltage alarm")
+            set_low_voltage_alarm(args.setlow)
+        if args.setcurrenttype != None:
+            if debug == True: print("----> call set current shunt")
+            set_current_type()
+        if args.setaddress != None:
+            if debug == True: print("----> call set address")
+            set_address()
+        if args.sethigh == None and args.setlow == None and args.setcurrenttype == None and args.setaddress == None:
+            if debug == True: print("----> read")
+            cmd_read()
+
     except BaseException:
         #print(BaseException)
         #print("can not connect to device")
