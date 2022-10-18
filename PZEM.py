@@ -14,7 +14,8 @@ MEASUREMENT = "TEST_PZEM"
 SLEEP = 0
 BAUDRATE = 9600
 
-debug = True
+debug = False
+pzem_shunt = {"50A": 1, "100A": 0, "200A": 2, "300A": 3}
 
 def helpmessage():
     print('Options:')
@@ -79,6 +80,10 @@ def get_pzem_register(pzem_model="PZEMgeneric"):
                 "Address": {"port": 2, "digits": 0, "Unit": None, "use": True, "writeable": True, "functioncode": 3},
                 "Current_Range": {"port": 3, "digits": 0, "Unit": "A", "use": True, "writeable": True, "functioncode": 3},
             }
+            pzem_shunt = {
+#                "shunt": {"50A": 1, "100A": 0, "200A": 2, "300A": 3}
+                "50A": 1, "100A": 0, "200A": 2, "300A": 3
+            }
     else:
         print("model not found")
         sys.exit(1)
@@ -89,17 +94,9 @@ def get_cli_arguments(scan_additional_arguments=None):
     parser.prog='pzem'
     parser.description='get all paramater of a pzem-smartmeter device'  
 
-#    parser.add_argument('COMMAND', 
-#                        nargs='?', const=None,
-#                        help='set|read')
-
     parser.add_argument('-d', '--device',
                         nargs='?', const=None,
                         help='Path to serial device like /dev/ttyUSB0.')
-#    parser.add_argument('-d', '--device',
-#                        nargs='?', default=METER_SERIALPORT, const=None,
-#                        help='Path to serial device like /dev/ttyUSB0.'
-#                             'Default: %s' % METER_SERIALPORT)
     parser.add_argument('-a', '--address', type=int, 
                         nargs='?', default=METER_MODBUSADDRESS, const=None,
                         help='Modbusaddress of the device.'
@@ -206,11 +203,15 @@ def set_high_voltage_alarm(highvoltage):
         )
     except TypeError: 
         print("TypeError")
+        return
     except ValueError: 
         print("ValueError")
+        return
     except IOError: 
         print("IOError")
+        return
 
+    time.sleep(1)
     msg = ("Voltage max alarm is set at: ")
     msg = msg + str( 
         instrument.read_register(
@@ -237,11 +238,15 @@ def set_low_voltage_alarm(lowvoltage):
         )
     except TypeError: 
         print("TypeError")
+        return
     except ValueError: 
         print("ValueError")
+        return
     except IOError: 
         print("IOError")
+        return
 
+    time.sleep(1)
     msg = ("Voltage min alarm is set at: ")
     msg = msg + str( 
         instrument.read_register(
@@ -253,11 +258,93 @@ def set_low_voltage_alarm(lowvoltage):
     )
     print(msg)
 
-def set_current_type():
-    if debug == True: print("----> set currenttype")
+def set_current_type(currenttype):
+    if args.model != "PZEM017":
+        print("Model does not support external shunts")
+        return
+    if debug == True: print("----> set currenttype to " + currenttype)
+    if debug == True: print("----> using register " + str(pzem_register["Current_Range"]["port"]))
+    if debug == True: print("----> using value " + str(pzem_shunt[currenttype]) + " (" + currenttype + ")")
+    if debug == True: print("----> using digits " + str(pzem_register["Current_Range"]["digits"]))
+    if debug == True: print("----> using functioncode " + str(pzem_register["Current_Range"]["functioncode"]))
+    if debug == True: print("----> using model " + str(args.model))
 
-def set_address():
+    try:
+        instrument.write_register(
+            registeraddress = pzem_register["Current_Range"]["port"],
+            value = pzem_shunt[currenttype],
+            number_of_decimals = pzem_register["Current_Range"]["digits"],
+            functioncode = 6
+        )
+    except TypeError: 
+        print("TypeError")
+        sys.exit(1)
+    except ValueError: 
+        print("ValueError")
+        sys.exit(1)
+    except IOError: 
+        print("IOError")
+        sys.exit(1)
+    reverse_pzem_shunt = dict((v,k) for k,v in pzem_shunt.items())
+
+    time.sleep(1)
+    msg = ("Currentype is set for type: ")
+    msg = msg + str( 
+        instrument.read_register(
+        functioncode = pzem_register["Current_Range"]["functioncode"],
+        registeraddress = pzem_register["Current_Range"]["port"],
+        number_of_decimals = pzem_register["Current_Range"]["digits"],
+        signed=False
+        )
+    )
+    msg = msg + " (" + str( reverse_pzem_shunt[pzem_shunt[currenttype]]) + ")"
+    print(msg)
+
+def set_address(newaddress):
     if debug == True: print("----> set address")
+    if debug == True: print("----> using register " + str(pzem_register["Address"]["port"]))
+    if debug == True: print("----> using value " + str(newaddress))
+    if debug == True: print("----> using digits " + str(pzem_register["Address"]["digits"]))
+    if debug == True: print("----> using functioncode " + str(pzem_register["Address"]["functioncode"]))
+
+    try:
+        instrument.write_register(
+            registeraddress = pzem_register["Address"]["port"],
+            value = newaddress,
+            number_of_decimals = pzem_register["Address"]["digits"],
+            functioncode = 6
+        )
+    except TypeError: 
+        print("TypeError")
+        sys.exit(1)
+    except ValueError: 
+        print("ValueError")
+        sys.exit(1)
+    except IOError: 
+        print("IOError")
+        sys.exit(1)
+
+    time.sleep(1)
+    newinstrument = minimalmodbus.Instrument( args.device, newaddress)
+    newinstrument.serial.baudrate = 9600
+    newinstrument.serial.parity = serial.PARITY_EVEN
+    newinstrument.serial.bytesize = 8
+    newinstrument.serial.timeout = 5
+    newinstrument.serial.write_timeout = 5
+    newinstrument.debug = False
+    newinstrument.clear_buffers_before_each_transaction = True
+
+    msg = ("Device address is setted to: ")
+    msg = msg + str( 
+        newinstrument.read_register(
+        functioncode = pzem_register["Address"]["functioncode"],
+        registeraddress = pzem_register["Address"]["port"],
+        number_of_decimals = pzem_register["Address"]["digits"],
+        signed=False
+        )
+    )
+    print(msg)
+
 
 args = get_cli_arguments()
 
@@ -287,18 +374,24 @@ else:
         if args.sethigh != None:
             if debug == True: print("----> call set high voltage alarm")
             set_high_voltage_alarm(args.sethigh)
+            sys.exit(0)
         if args.setlow != None:
             if debug == True: print("----> call set low voltage alarm")
             set_low_voltage_alarm(args.setlow)
+            sys.exit(0)
         if args.setcurrenttype != None:
             if debug == True: print("----> call set current shunt")
-            set_current_type()
+            set_current_type(args.setcurrenttype)
+            sys.exit(0)
         if args.setaddress != None:
             if debug == True: print("----> call set address")
-            set_address()
+            set_address(args.setaddress)
+            sys.exit(0)
         if args.sethigh == None and args.setlow == None and args.setcurrenttype == None and args.setaddress == None:
             if debug == True: print("----> read")
             cmd_read()
+            sys.exit(0)
+
 
     except BaseException:
         #print(BaseException)
