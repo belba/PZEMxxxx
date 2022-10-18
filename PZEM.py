@@ -395,7 +395,7 @@ else:
 
     except BaseException:
         #print(BaseException)
-        #print("can not connect to device")
+        print("can not connect to device")
         #print()
         #show_connection_parameters()
         sys.exit(1)
